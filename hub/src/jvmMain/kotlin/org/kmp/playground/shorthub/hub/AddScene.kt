@@ -1,0 +1,127 @@
+package org.kmp.playground.shorthub.hub
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
+/**
+ * A popup composable for adding a new shortcut.
+ * Designed to be shown when a hotkey is pressed.
+ */
+@Composable
+fun AddShortcutPopup(
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (title: String, action: String) -> Unit
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn() + scaleIn(
+            initialScale = 0.85f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ),
+        exit = fadeOut() + scaleOut(targetScale = 0.85f)
+    ) {
+        // Overlay background that dims the rest of the screen
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                modifier = Modifier
+                    .widthIn(max = 400.dp)
+                    .wrapContentHeight(),
+                shape = RoundedCornerShape(32.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp,
+                shadowElevation = 16.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    Text(
+                        text = "New Shortcut",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    var title by remember { mutableStateOf("") }
+                    var action by remember { mutableStateOf("") }
+
+                    // Title Input
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        placeholder = { Text("e.g. Open Terminal") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
+
+                    // Action/Shortcut Input
+                    OutlinedTextField(
+                        value = action,
+                        onValueChange = { action = it },
+                        label = { Text("Action / Shortcut") },
+                        placeholder = { Text("e.g. CMD + SHIFT + T") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("Cancel")
+                        }
+                        
+                        Button(
+                            onClick = { 
+                                if (title.isNotBlank() && action.isNotBlank()) {
+                                    onSave(title, action)
+                                }
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                        ) {
+                            Text("Save Shortcut")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
