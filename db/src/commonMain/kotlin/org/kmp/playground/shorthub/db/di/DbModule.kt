@@ -12,6 +12,7 @@ val dbModule = module {
     }
     
     single { get<AppDatabase>().shortcutDao() }
+    single { get<AppDatabase>().prefDao() }
     
-    single<ShortcutRepository> { ShortcutRepositoryImpl(get()) }
+    single<ShortcutRepository> { ShortcutRepositoryImpl(get(), get()) }
 }
