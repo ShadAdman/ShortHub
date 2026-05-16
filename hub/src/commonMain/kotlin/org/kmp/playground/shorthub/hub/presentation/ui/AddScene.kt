@@ -1,4 +1,4 @@
-package org.kmp.playground.shorthub.hub
+package org.kmp.playground.shorthub.hub.presentation.ui
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
@@ -12,11 +12,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import org.kmp.playground.shorthub.hub.presentation.add.AddIntent
+import org.kmp.playground.shorthub.hub.presentation.add.AddViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * A popup composable for adding a new shortcut.
- * Designed to be shown when a hotkey is pressed.
- */
+@Composable
+fun AddShortcutScene(
+    viewModel: AddViewModel = koinViewModel()
+) {
+    val state by viewModel.state.collectAsState()
+    
+    AddShortcutPopup(
+        isVisible = state.isVisible,
+        onDismiss = { viewModel.onIntent(AddIntent.Dismiss) },
+        onSave = { title, shortcut -> 
+            viewModel.onIntent(AddIntent.SaveShortcut(title, shortcut))
+        }
+    )
+}
+
 @Composable
 fun AddShortcutPopup(
     isVisible: Boolean,
@@ -34,7 +48,6 @@ fun AddShortcutPopup(
         ),
         exit = fadeOut() + scaleOut(targetScale = 0.85f)
     ) {
-        // Overlay background that dims the rest of the screen
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -64,7 +77,6 @@ fun AddShortcutPopup(
                     var title by remember { mutableStateOf("") }
                     var action by remember { mutableStateOf("") }
 
-                    // Title Input
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
@@ -72,14 +84,9 @@ fun AddShortcutPopup(
                         placeholder = { Text("e.g. Open Terminal") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                        )
+                        singleLine = true
                     )
 
-                    // Action/Shortcut Input
                     OutlinedTextField(
                         value = action,
                         onValueChange = { action = it },
@@ -87,11 +94,7 @@ fun AddShortcutPopup(
                         placeholder = { Text("e.g. CMD + SHIFT + T") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                        )
+                        singleLine = true
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -101,10 +104,7 @@ fun AddShortcutPopup(
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
+                        TextButton(onClick = onDismiss) {
                             Text("Cancel")
                         }
                         

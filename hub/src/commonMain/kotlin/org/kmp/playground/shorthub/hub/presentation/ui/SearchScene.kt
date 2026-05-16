@@ -1,4 +1,4 @@
-package org.kmp.playground.shorthub.hub
+package org.kmp.playground.shorthub.hub.presentation.ui
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
@@ -15,15 +15,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.kmp.playground.shorthub.db.domain.model.Shortcut
+import org.kmp.playground.shorthub.hub.presentation.search.SearchIntent
+import org.kmp.playground.shorthub.hub.presentation.search.SearchViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
-data class ShortcutAction(val title: String, val shortcut: String)
-
+@Composable
+fun SearchShortcutScene(
+    viewModel: SearchViewModel = koinViewModel()
+) {
+    val state by viewModel.state.collectAsState()
+    
+    SearchShortcutPopup(
+        isVisible = state.isVisible,
+        onDismiss = { viewModel.onIntent(SearchIntent.Dismiss) },
+        searchQuery = state.query,
+        onQueryChange = { viewModel.onIntent(SearchIntent.UpdateQuery(it)) },
+        results = state.results
+    )
+}
 
 @Composable
 fun SearchShortcutPopup(
     isVisible: Boolean,
     onDismiss: () -> Unit,
-    availableActions: List<ShortcutAction>
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
+    results: List<Shortcut>
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -44,23 +62,16 @@ fun SearchShortcutPopup(
             contentAlignment = Alignment.TopCenter
         ) {
             Surface(
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .wrapContentHeight(),
+                modifier = Modifier.widthIn(max = 500.dp),
                 shape = RoundedCornerShape(28.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 6.dp,
                 shadowElevation = 12.dp
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    var searchQuery by remember { mutableStateOf("") }
-                    
-                    // Search Input
+                Column(modifier = Modifier.padding(16.dp)) {
                     OutlinedTextField(
                         value = searchQuery,
-                        onValueChange = { searchQuery = it },
+                        onValueChange = onQueryChange,
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Search shortcuts...") },
                         shape = RoundedCornerShape(20.dp),
@@ -72,40 +83,22 @@ fun SearchShortcutPopup(
                         )
                     )
 
-                    // Results List
-                    val filteredActions = remember(searchQuery, availableActions) {
-                        if (searchQuery.isBlank()) emptyList()
-                        else availableActions
-                            .filter { it.title.contains(searchQuery, ignoreCase = true) }
-                            .take(10)
-                    }
-
-                    if (filteredActions.isNotEmpty()) {
+                    if (results.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        
                         LazyColumn(
-                            modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(filteredActions) { action ->
-                                ShortcutResultItem(
-                                    action = action
-                                )
+                            items(results) { shortcut ->
+                                ShortcutResultItem(shortcut)
                             }
                         }
                     } else if (searchQuery.isNotBlank()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "No results found",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            "No results found",
+                            modifier = Modifier.padding(32.dp).align(Alignment.CenterHorizontally),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -114,34 +107,28 @@ fun SearchShortcutPopup(
 }
 
 @Composable
-private fun ShortcutResultItem(
-    action: ShortcutAction
-) {
+private fun ShortcutResultItem(shortcut: Shortcut) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         color = Color.Transparent
     ) {
         Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = action.title,
+                text = shortcut.title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.Medium
             )
-            
             Surface(
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
-                    text = action.shortcut,
+                    text = shortcut.shortcut,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
