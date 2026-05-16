@@ -1,6 +1,6 @@
 # ShortHub
 
-ShortHub is a simple and local shortcut management system built with Kotlin Multiplatform (KMP) targeting the Desktop (JVM). It allows users to store, search, and manage custom shortcuts locally on their machine.
+ShortHub is a simple and local shortcut management system built with Kotlin Multiplatform, targeting the Desktop (JVM). It allows users to store, search, and manage custom shortcuts locally.
 
 ## Project Structure
 
