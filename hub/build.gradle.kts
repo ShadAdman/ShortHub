@@ -23,6 +23,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.koin.compose)
             implementation(libs.koin.core)
+            implementation(project(":db"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
