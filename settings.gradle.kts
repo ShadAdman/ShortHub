@@ -33,6 +33,6 @@ plugins {
 }
 
 include(":composeApp")
-include(":prefs")
+include(":pref")
 include(":hub")
 include(":db")

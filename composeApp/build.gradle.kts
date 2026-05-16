@@ -25,7 +25,7 @@ kotlin {
             implementation(libs.koin.core)
             implementation(project(":db"))
             implementation(project(":hub"))
-            implementation(project(":prefs"))
+            implementation(project(":pref"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
