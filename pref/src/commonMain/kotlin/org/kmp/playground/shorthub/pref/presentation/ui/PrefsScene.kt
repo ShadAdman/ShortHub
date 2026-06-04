@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.kmp.playground.shorthub.pref.presentation.RecordingTarget
+import org.kmp.playground.shorthub.pref.presentation.PrefsIntent
 import org.kmp.playground.shorthub.pref.presentation.PrefsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -104,6 +105,41 @@ fun PrefsScene(
                     }
                 }
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ElevatedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "Launch at Login",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Automatically start ShortHub when you log in",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = state.prefs.launchAtLogin,
+                        onCheckedChange = { viewModel.onIntent(PrefsIntent.ToggleLaunchAtLogin) }
+                    )
+                }
+            }
         }
     }
 }

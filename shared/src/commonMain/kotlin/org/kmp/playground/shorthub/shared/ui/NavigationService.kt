@@ -13,14 +13,27 @@ class NavigationService {
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
 
+    private val _isWindowVisible = MutableStateFlow(true)
+    val isWindowVisible = _isWindowVisible.asStateFlow()
+
     fun showAdd() {
+        _isWindowVisible.value = true
         _isAddVisible.value = true
         _isSearchVisible.value = false
     }
 
     fun showSearch() {
+        _isWindowVisible.value = true
         _isSearchVisible.value = true
         _isAddVisible.value = false
+    }
+
+    fun toggleWindow() {
+        _isWindowVisible.value = !_isWindowVisible.value
+    }
+
+    fun setWindowVisible(visible: Boolean) {
+        _isWindowVisible.value = visible
     }
 
     fun hideAll() {

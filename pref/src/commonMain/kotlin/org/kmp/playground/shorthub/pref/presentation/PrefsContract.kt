@@ -16,4 +16,5 @@ enum class RecordingTarget {
 sealed interface PrefsIntent {
     data class UpdateAddShortcut(val shortcut: String) : PrefsIntent
     data class UpdateSearchShortcut(val shortcut: String) : PrefsIntent
+    data object ToggleLaunchAtLogin : PrefsIntent
 }

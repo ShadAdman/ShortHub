@@ -1,7 +1,13 @@
 package org.kmp.playground.shorthub
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberTrayState
 import org.kmp.playground.shorthub.db.di.dbModule
 import org.kmp.playground.shorthub.hub.di.hubModule
 import org.kmp.playground.shorthub.pref.di.prefModule
@@ -17,7 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-fun main() {
+fun main(args: Array<String>) {
     startKoin {
         modules(dbModule, hubModule, prefModule, sharedModule)
     }
@@ -26,6 +32,10 @@ fun main() {
     val navigationService = getKoin().get<NavigationService>()
     val repository = getKoin().get<ShortcutRepository>()
     val scope = MainScope()
+
+    if (args.contains("--minimized")) {
+        navigationService.setWindowVisible(false)
+    }
 
     // Global Shortcut Handler
     combine(
@@ -42,19 +52,34 @@ fun main() {
     inputObserver.start()
 
     application {
+        val isVisible by navigationService.isWindowVisible.collectAsState()
+        val trayState = rememberTrayState()
+        
+        Tray(
+            state = trayState,
+            icon = ColorPainter(Color.Cyan), // Simple placeholder icon
+            menu = {
+                Item("Show ShortHub", onClick = { navigationService.setWindowVisible(true) })
+                Separator()
+                Item("Exit", onClick = {
+                    inputObserver.stop()
+                    exitApplication()
+                })
+            }
+        )
+
         Window(
             onCloseRequest = {
-                inputObserver.stop()
-                exitApplication()
+                navigationService.setWindowVisible(false)
             },
+            visible = isVisible,
             title = "ShortHub",
             undecorated = true,
             transparent = true,
         ) {
             App(
                 onClose = {
-                    inputObserver.stop()
-                    exitApplication()
+                    navigationService.setWindowVisible(false)
                 }
             )
         }

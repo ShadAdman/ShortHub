@@ -11,7 +11,8 @@ import org.kmp.playground.shorthub.shared.ui.NavigationService
 class PrefsViewModel(
     private val repository: ShortcutRepository,
     private val inputObserver: InputObserver,
-    private val navigationService: NavigationService
+    private val navigationService: NavigationService,
+    private val loginManager: org.kmp.playground.shorthub.shared.LoginManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PrefsState())
@@ -71,6 +72,11 @@ class PrefsViewModel(
             }
             is PrefsIntent.UpdateSearchShortcut -> {
                 updatePrefs { it.copy(searchShortcut = intent.shortcut) }
+            }
+            PrefsIntent.ToggleLaunchAtLogin -> {
+                val newEnabled = !_state.value.prefs.launchAtLogin
+                updatePrefs { it.copy(launchAtLogin = newEnabled) }
+                loginManager.setLaunchAtLogin(newEnabled)
             }
         }
     }
