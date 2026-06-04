@@ -48,8 +48,15 @@ fun main() {
                 exitApplication()
             },
             title = "ShortHub",
+            undecorated = true,
+            transparent = true,
         ) {
-            App()
+            App(
+                onClose = {
+                    inputObserver.stop()
+                    exitApplication()
+                }
+            )
         }
     }
 }
