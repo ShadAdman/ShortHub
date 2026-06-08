@@ -27,7 +27,7 @@ class PrefsViewModel(
 
         inputObserver.keyEvents
             .onEach { event ->
-                if (event.isPressed && _state.value.recordingTarget != null) {
+                if (_state.value.recordingTarget != null && event.isPressed) {
                     handleRecordedKey(event)
                 }
             }
@@ -36,11 +36,21 @@ class PrefsViewModel(
 
     private fun handleRecordedKey(event: org.kmp.playground.shorthub.shared.observation.KeyEvent) {
         val shortcut = buildString {
-            if (event.ctrlPressed) append("Ctrl+")
-            if (event.altPressed) append("Alt+")
-            if (event.shiftPressed) append("Shift+")
-            if (event.metaPressed) append("Meta+")
-            append(event.key)
+            val mods = mutableListOf<String>()
+            if (event.ctrlPressed) mods.add("Ctrl")
+            if (event.altPressed) mods.add("Alt")
+            if (event.shiftPressed) mods.add("Shift")
+            if (event.metaPressed) mods.add("Meta")
+            
+            append(mods.joinToString("+"))
+            
+            val key = event.key
+            val isModifier = key in listOf("Ctrl", "Control", "Alt", "Alt Graph", "Shift", "Meta", "Command", "Windows")
+            
+            if (!isModifier && key.isNotEmpty() && event.isPressed) {
+                if (mods.isNotEmpty()) append("+")
+                append(key)
+            }
         }
         
         _state.update { it.copy(recordedShortcut = shortcut) }
@@ -53,6 +63,7 @@ class PrefsViewModel(
         when (currentState.recordingTarget) {
             RecordingTarget.AddShortcut -> onIntent(PrefsIntent.UpdateAddShortcut(shortcut))
             RecordingTarget.SearchShortcut -> onIntent(PrefsIntent.UpdateSearchShortcut(shortcut))
+            RecordingTarget.CloseWindowShortcut -> onIntent(PrefsIntent.UpdateCloseWindowShortcut(shortcut))
             null -> {}
         }
         
@@ -61,7 +72,6 @@ class PrefsViewModel(
 
     fun stopRecording() {
         _state.update { it.copy(recordingTarget = null, recordedShortcut = null) }
-        inputObserver.stop()
         navigationService.setRecording(false)
     }
 
@@ -72,6 +82,9 @@ class PrefsViewModel(
             }
             is PrefsIntent.UpdateSearchShortcut -> {
                 updatePrefs { it.copy(searchShortcut = intent.shortcut) }
+            }
+            is PrefsIntent.UpdateCloseWindowShortcut -> {
+                updatePrefs { it.copy(closeWindowShortcut = intent.shortcut) }
             }
             PrefsIntent.ToggleLaunchAtLogin -> {
                 val newEnabled = !_state.value.prefs.launchAtLogin
@@ -85,6 +98,7 @@ class PrefsViewModel(
         val currentShortcut = when (target) {
             RecordingTarget.AddShortcut -> _state.value.prefs.addNewShortcut
             RecordingTarget.SearchShortcut -> _state.value.prefs.searchShortcut
+            RecordingTarget.CloseWindowShortcut -> _state.value.prefs.closeWindowShortcut
         }
         _state.update { it.copy(recordingTarget = target, recordedShortcut = currentShortcut) }
         inputObserver.start()

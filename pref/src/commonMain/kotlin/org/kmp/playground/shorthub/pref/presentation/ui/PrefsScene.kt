@@ -4,7 +4,9 @@ import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +27,7 @@ fun PrefsScene(
 ) {
     val state by viewModel.state.collectAsState()
     val infiniteTransition = rememberInfiniteTransition(label = "backgroundAnimation")
+    val scrollState = rememberScrollState()
     
     val color1 by infiniteTransition.animateColor(
         initialValue = MaterialTheme.colorScheme.surface,
@@ -52,7 +55,9 @@ fun PrefsScene(
             .padding(24.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -102,6 +107,24 @@ fun PrefsScene(
                         viewModel.saveRecordedShortcut()
                     } else {
                         viewModel.startRecording(RecordingTarget.SearchShortcut)
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ShortcutOptionItem(
+                title = "Close Window",
+                description = "Hotkey to close the currently active popup",
+                currentShortcut = if (state.recordingTarget == RecordingTarget.CloseWindowShortcut) {
+                    state.recordedShortcut ?: state.prefs.closeWindowShortcut
+                } else state.prefs.closeWindowShortcut,
+                isRecording = state.recordingTarget == RecordingTarget.CloseWindowShortcut,
+                onToggleRecording = {
+                    if (state.recordingTarget == RecordingTarget.CloseWindowShortcut) {
+                        viewModel.saveRecordedShortcut()
+                    } else {
+                        viewModel.startRecording(RecordingTarget.CloseWindowShortcut)
                     }
                 }
             )

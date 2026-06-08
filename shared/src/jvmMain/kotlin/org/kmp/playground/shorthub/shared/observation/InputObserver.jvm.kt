@@ -19,19 +19,29 @@ class JvmInputObserver : InputObserver, NativeKeyListener {
         logger.useParentHandlers = false
     }
 
+    private var isStarted = false
+
     override fun start() {
+        if (isStarted) return
         try {
-            GlobalScreen.registerNativeHook()
+            if (!GlobalScreen.isNativeHookRegistered()) {
+                GlobalScreen.registerNativeHook()
+            }
             GlobalScreen.addNativeKeyListener(this)
+            isStarted = true
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     override fun stop() {
+        if (!isStarted) return
         try {
             GlobalScreen.removeNativeKeyListener(this)
-            GlobalScreen.unregisterNativeHook()
+            if (GlobalScreen.isNativeHookRegistered()) {
+                GlobalScreen.unregisterNativeHook()
+            }
+            isStarted = false
         } catch (e: Exception) {
             e.printStackTrace()
         }

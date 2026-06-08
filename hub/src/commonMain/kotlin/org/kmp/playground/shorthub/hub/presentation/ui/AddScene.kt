@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.kmp.playground.shorthub.hub.presentation.add.AddIntent
@@ -18,7 +19,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AddShortcutScene(
-    viewModel: AddViewModel = koinViewModel()
+    viewModel: AddViewModel = koinViewModel(),
+    showBackgroundDim: Boolean = true
 ) {
     val state by viewModel.state.collectAsState()
     
@@ -26,13 +28,9 @@ fun AddShortcutScene(
         isVisible = state.isVisible,
         recordedShortcut = state.recordedShortcut,
         isRecording = state.isRecording,
-        onToggleRecording = {
-            if (state.isRecording) {
-                viewModel.stopRecording()
-            } else {
-                viewModel.startRecording()
-            }
-        },
+        showBackgroundDim = showBackgroundDim,
+        onStartRecording = { viewModel.startRecording() },
+        onStopRecording = { viewModel.stopRecording() },
         onDismiss = { viewModel.onIntent(AddIntent.Dismiss) },
         onSave = { title, shortcut -> 
             viewModel.onIntent(AddIntent.SaveShortcut(title, shortcut))
@@ -45,9 +43,11 @@ fun AddShortcutPopup(
     isVisible: Boolean,
     recordedShortcut: String,
     isRecording: Boolean,
-    onToggleRecording: () -> Unit,
+    onStartRecording: () -> Unit,
+    onStopRecording: () -> Unit,
     onDismiss: () -> Unit,
-    onSave: (title: String, action: String) -> Unit
+    onSave: (title: String, action: String) -> Unit,
+    showBackgroundDim: Boolean = true
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -63,22 +63,24 @@ fun AddShortcutPopup(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.35f))
-                .padding(16.dp),
+                .background(if (showBackgroundDim) Color.Black.copy(alpha = 0.35f) else Color.Transparent)
+                .then(if (showBackgroundDim) Modifier.padding(16.dp) else Modifier),
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                modifier = Modifier
-                    .widthIn(max = 400.dp)
-                    .wrapContentHeight(),
-                shape = RoundedCornerShape(32.dp),
+                modifier = if (showBackgroundDim) {
+                    Modifier.widthIn(max = 400.dp).wrapContentHeight()
+                } else {
+                    Modifier.fillMaxSize()
+                },
+                shape = if (showBackgroundDim) RoundedCornerShape(32.dp) else RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp,
-                shadowElevation = 16.dp
+                shadowElevation = if (showBackgroundDim) 16.dp else 0.dp
             ) {
                 Column(
-                    modifier = Modifier.padding(32.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
                         text = "New Shortcut",
@@ -102,23 +104,19 @@ fun AddShortcutPopup(
                     OutlinedTextField(
                         value = action,
                         onValueChange = { action = it },
-                        label = { Text("Action / Shortcut") },
+                        label = { Text(if (isRecording) "Recording... Press keys" else "Action / Shortcut") },
                         placeholder = { Text("e.g. CMD + SHIFT + T") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { 
+                                if (it.isFocused) onStartRecording() else onStopRecording()
+                            },
                         shape = RoundedCornerShape(16.dp),
                         singleLine = true,
-                        trailingIcon = {
-                            Button(
-                                onClick = onToggleRecording,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.padding(end = 4.dp)
-                            ) {
-                                Text(if (isRecording) "Save" else "Record")
-                            }
-                        }
+                        readOnly = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))

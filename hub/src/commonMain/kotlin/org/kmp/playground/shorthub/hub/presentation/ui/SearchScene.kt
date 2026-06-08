@@ -22,7 +22,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SearchShortcutScene(
-    viewModel: SearchViewModel = koinViewModel()
+    viewModel: SearchViewModel = koinViewModel(),
+    showBackgroundDim: Boolean = true
 ) {
     val state by viewModel.state.collectAsState()
     
@@ -31,7 +32,8 @@ fun SearchShortcutScene(
         onDismiss = { viewModel.onIntent(SearchIntent.Dismiss) },
         searchQuery = state.query,
         onQueryChange = { viewModel.onIntent(SearchIntent.UpdateQuery(it)) },
-        results = state.results
+        results = state.results,
+        showBackgroundDim = showBackgroundDim
     )
 }
 
@@ -41,7 +43,8 @@ fun SearchShortcutPopup(
     onDismiss: () -> Unit,
     searchQuery: String,
     onQueryChange: (String) -> Unit,
-    results: List<Shortcut>
+    results: List<Shortcut>,
+    showBackgroundDim: Boolean = true
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -57,18 +60,22 @@ fun SearchShortcutPopup(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-                .padding(top = 100.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                .background(if (showBackgroundDim) Color.Black.copy(alpha = 0.4f) else Color.Transparent)
+                .then(if (showBackgroundDim) Modifier.padding(top = 100.dp, start = 16.dp, end = 16.dp, bottom = 16.dp) else Modifier),
             contentAlignment = Alignment.TopCenter
         ) {
             Surface(
-                modifier = Modifier.widthIn(max = 500.dp),
-                shape = RoundedCornerShape(28.dp),
+                modifier = if (showBackgroundDim) {
+                    Modifier.widthIn(max = 500.dp)
+                } else {
+                    Modifier.fillMaxSize()
+                },
+                shape = if (showBackgroundDim) RoundedCornerShape(28.dp) else RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 6.dp,
-                shadowElevation = 12.dp
+                shadowElevation = if (showBackgroundDim) 12.dp else 0.dp
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = onQueryChange,

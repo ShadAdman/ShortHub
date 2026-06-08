@@ -34,7 +34,7 @@ class AddViewModel(
 
         inputObserver.keyEvents
             .onEach { event ->
-                if (_state.value.isVisible && event.isPressed && _state.value.isRecording) {
+                if (_state.value.isVisible && _state.value.isRecording && event.isPressed) {
                     handleRecordedKey(event)
                 }
             }
@@ -43,11 +43,21 @@ class AddViewModel(
 
     private fun handleRecordedKey(event: org.kmp.playground.shorthub.shared.observation.KeyEvent) {
         val shortcut = buildString {
-            if (event.ctrlPressed) append("Ctrl+")
-            if (event.altPressed) append("Alt+")
-            if (event.shiftPressed) append("Shift+")
-            if (event.metaPressed) append("Meta+")
-            append(event.key)
+            val mods = mutableListOf<String>()
+            if (event.ctrlPressed) mods.add("Ctrl")
+            if (event.altPressed) mods.add("Alt")
+            if (event.shiftPressed) mods.add("Shift")
+            if (event.metaPressed) mods.add("Meta")
+            
+            append(mods.joinToString("+"))
+            
+            val key = event.key
+            val isModifier = key in listOf("Ctrl", "Control", "Alt", "Alt Graph", "Shift", "Meta", "Command", "Windows")
+            
+            if (!isModifier && key.isNotEmpty() && event.isPressed) {
+                if (mods.isNotEmpty()) append("+")
+                append(key)
+            }
         }
         _state.update { it.copy(recordedShortcut = shortcut) }
     }
