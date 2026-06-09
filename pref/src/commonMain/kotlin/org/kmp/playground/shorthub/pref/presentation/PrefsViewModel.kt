@@ -6,20 +6,16 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.kmp.playground.shorthub.db.domain.repository.ShortcutRepository
 import org.kmp.playground.shorthub.shared.observation.InputObserver
+import org.kmp.playground.shorthub.shared.ui.NavigationService
 
 class PrefsViewModel(
     private val repository: ShortcutRepository,
-    private val inputObserver: InputObserver
+    private val inputObserver: InputObserver,
+    private val navigationService: NavigationService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PrefsState())
     val state = _state.asStateFlow()
-
-    private var recordingTarget: RecordingTarget? = null
-
-    enum class RecordingTarget {
-        AddShortcut, SearchShortcut
-    }
 
     init {
         repository.getPrefs()
@@ -30,7 +26,7 @@ class PrefsViewModel(
 
         inputObserver.keyEvents
             .onEach { event ->
-                if (event.isPressed && recordingTarget != null) {
+                if (event.isPressed && _state.value.recordingTarget != null) {
                     handleRecordedKey(event)
                 }
             }
@@ -46,13 +42,26 @@ class PrefsViewModel(
             append(event.key)
         }
         
-        when (recordingTarget) {
+        _state.update { it.copy(recordedShortcut = shortcut) }
+    }
+
+    fun saveRecordedShortcut() {
+        val currentState = _state.value
+        val shortcut = currentState.recordedShortcut ?: return
+        
+        when (currentState.recordingTarget) {
             RecordingTarget.AddShortcut -> onIntent(PrefsIntent.UpdateAddShortcut(shortcut))
             RecordingTarget.SearchShortcut -> onIntent(PrefsIntent.UpdateSearchShortcut(shortcut))
             null -> {}
         }
-        recordingTarget = null
+        
+        stopRecording()
+    }
+
+    fun stopRecording() {
+        _state.update { it.copy(recordingTarget = null, recordedShortcut = null) }
         inputObserver.stop()
+        navigationService.setRecording(false)
     }
 
     fun onIntent(intent: PrefsIntent) {
@@ -67,8 +76,13 @@ class PrefsViewModel(
     }
 
     fun startRecording(target: RecordingTarget) {
-        recordingTarget = target
+        val currentShortcut = when (target) {
+            RecordingTarget.AddShortcut -> _state.value.prefs.addNewShortcut
+            RecordingTarget.SearchShortcut -> _state.value.prefs.searchShortcut
+        }
+        _state.update { it.copy(recordingTarget = target, recordedShortcut = currentShortcut) }
         inputObserver.start()
+        navigationService.setRecording(true)
     }
 
     private fun updatePrefs(reducer: (org.kmp.playground.shorthub.db.domain.model.ShortcutPrefs) -> org.kmp.playground.shorthub.db.domain.model.ShortcutPrefs) {

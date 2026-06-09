@@ -14,7 +14,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.kmp.playground.shorthub.pref.presentation.PrefsIntent
+import org.kmp.playground.shorthub.pref.presentation.RecordingTarget
 import org.kmp.playground.shorthub.pref.presentation.PrefsViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -74,8 +74,17 @@ fun PrefsScene(
             ShortcutOptionItem(
                 title = "Global Add Shortcut",
                 description = "Hotkey to quickly add a new shortcut",
-                currentShortcut = state.prefs.addNewShortcut,
-                onShortcutChange = { viewModel.startRecording(PrefsViewModel.RecordingTarget.AddShortcut) }
+                currentShortcut = if (state.recordingTarget == RecordingTarget.AddShortcut) {
+                    state.recordedShortcut ?: state.prefs.addNewShortcut
+                } else state.prefs.addNewShortcut,
+                isRecording = state.recordingTarget == RecordingTarget.AddShortcut,
+                onToggleRecording = {
+                    if (state.recordingTarget == RecordingTarget.AddShortcut) {
+                        viewModel.saveRecordedShortcut()
+                    } else {
+                        viewModel.startRecording(RecordingTarget.AddShortcut)
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -83,8 +92,17 @@ fun PrefsScene(
             ShortcutOptionItem(
                 title = "Search Shortcuts",
                 description = "Hotkey to open the search overlay",
-                currentShortcut = state.prefs.searchShortcut,
-                onShortcutChange = { viewModel.startRecording(PrefsViewModel.RecordingTarget.SearchShortcut) }
+                currentShortcut = if (state.recordingTarget == RecordingTarget.SearchShortcut) {
+                    state.recordedShortcut ?: state.prefs.searchShortcut
+                } else state.prefs.searchShortcut,
+                isRecording = state.recordingTarget == RecordingTarget.SearchShortcut,
+                onToggleRecording = {
+                    if (state.recordingTarget == RecordingTarget.SearchShortcut) {
+                        viewModel.saveRecordedShortcut()
+                    } else {
+                        viewModel.startRecording(RecordingTarget.SearchShortcut)
+                    }
+                }
             )
         }
     }
@@ -95,7 +113,8 @@ private fun ShortcutOptionItem(
     title: String,
     description: String,
     currentShortcut: String,
-    onShortcutChange: (String) -> Unit
+    isRecording: Boolean,
+    onToggleRecording: () -> Unit
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -142,13 +161,13 @@ private fun ShortcutOptionItem(
             }
 
             Button(
-                onClick = { 
-                    // Simulating a change for now
-                    onShortcutChange("Ctrl+Shift+X") 
-                },
-                shape = RoundedCornerShape(12.dp)
+                onClick = onToggleRecording,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text("Change")
+                Text(if (isRecording) "Save" else "Change")
             }
         }
     }
