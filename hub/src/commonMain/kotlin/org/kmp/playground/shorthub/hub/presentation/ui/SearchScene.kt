@@ -75,7 +75,7 @@ fun SearchShortcutPopup(
                 tonalElevation = 6.dp,
                 shadowElevation = if (showBackgroundDim) 12.dp else 0.dp
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
+                Column(modifier = Modifier.padding(18.dp)) {
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = onQueryChange,

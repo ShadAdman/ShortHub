@@ -44,12 +44,12 @@ fun WindowScope.WindowFrame(
         modifier = Modifier
             .fillMaxSize()
             .drawWithContent {
-                rotate(angle) {
-                    drawRect(
-                        brush = brush,
-                        style = Stroke(width = 16.dp.toPx())
-                    )
-                }
+//                rotate(angle) {
+//                    drawRect(
+//                        brush = brush,
+//                        style = Stroke(width = 16.dp.toPx())
+//                    )
+//                }
                 drawContent()
             }
             .padding(6.dp)

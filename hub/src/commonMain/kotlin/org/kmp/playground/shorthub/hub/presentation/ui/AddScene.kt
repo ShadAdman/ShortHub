@@ -62,7 +62,6 @@ fun AddShortcutPopup(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .background(if (showBackgroundDim) Color.Black.copy(alpha = 0.35f) else Color.Transparent)
                 .then(if (showBackgroundDim) Modifier.padding(16.dp) else Modifier),
             contentAlignment = Alignment.Center
@@ -71,7 +70,7 @@ fun AddShortcutPopup(
                 modifier = if (showBackgroundDim) {
                     Modifier.widthIn(max = 400.dp).wrapContentHeight()
                 } else {
-                    Modifier.fillMaxSize()
+                    Modifier
                 },
                 shape = if (showBackgroundDim) RoundedCornerShape(32.dp) else RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surface,
